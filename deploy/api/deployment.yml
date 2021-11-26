@@ -1,0 +1,70 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: toy
+  name: toy
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: toy
+  template:
+    metadata:
+      labels:
+        app: toy
+    spec:
+      containers:
+        - image: toy:v1.2
+          imagePullPolicy: IfNotPresent
+          name: toy-flask
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: toy-rollout
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: toy
+  template:
+    metadata:
+      labels:
+        app: toy
+    spec:
+      containers:
+        - image: toy:v1.3
+          imagePullPolicy: IfNotPresent
+          name: toy-flask
+  minReadySeconds: 30
+  revisionHistoryLimit: 3
+  strategy:
+    canary:
+      maxSurge: "25%"
+      maxUnavailable: 0
+      steps:
+        - setWeight: 30
+        - pause:
+            duration: 1m
+        - setWeight: 60
+        - pause: {} # pause indefinitely
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: toy
+  name: toy
+spec:
+  ports:
+    - name: web
+      port: 5000
+      protocol: TCP
+      targetPort: 5000
+  selector:
+    app: toy
+  type: LoadBalancer
+status:
+  loadBalancer: {}

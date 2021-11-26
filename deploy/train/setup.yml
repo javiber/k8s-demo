@@ -1,0 +1,37 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: train
+  labels:
+    name: train
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cachevol
+  namespace: train
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    # TODO: remove reference to my home
+    path: /home/javiber/workspace/k8s-demo/.cachevol
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cachevol-claim
+  namespace: train
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

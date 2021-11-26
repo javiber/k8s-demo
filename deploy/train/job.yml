@@ -1,0 +1,34 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: training-job
+  namespace: train
+spec:
+  template:
+    spec:
+      containers:
+        - image: train:v1
+          imagePullPolicy: IfNotPresent
+          name: training1
+          command: ["python", "train.py"]
+          volumeMounts:
+            - name: cachevol
+              mountPath: /root/.cache/
+            - mountPath: /dev/shm
+              name: dshm
+          env:
+            - name: CACHE_PATH
+              value: /root/.cache/
+          resources:
+            limits:
+              nvidia.com/gpu: 1 # requesting 1 GPU
+      restartPolicy: Never
+      volumes:
+        - name: cachevol
+          persistentVolumeClaim:
+            claimName: cachevol-claim
+        - name: dshm
+          emptyDir:
+            medium: Memory
+  backoffLimit: 1
