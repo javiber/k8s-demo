@@ -6,6 +6,9 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 import subprocess
 
+import click
 from api import __version__, base_dir
 
-subprocess.run(f"docker build -t api:v{__version__} {base_dir}".split())
+image = f"api:v{__version__}"
+click.secho(f"building {image=}", color="yellow")
+subprocess.run(f"docker build -t {image} {base_dir}".split())

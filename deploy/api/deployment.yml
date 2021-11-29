@@ -2,69 +2,80 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: api
   labels:
-    app: toy
-  name: toy
+    app: api
+    version: v0.1.0
 spec:
-  replicas: 10
+  replicas: 3
   selector:
     matchLabels:
-      app: toy
+      app: api
+      version: v0.1.0
   template:
     metadata:
       labels:
-        app: toy
+        app: api
+        version: v0.1.0
     spec:
       containers:
-        - image: toy:v1.2
+        - name: api
+          image: api:v0.1.0
           imagePullPolicy: IfNotPresent
-          name: toy-flask
----
-apiVersion: argoproj.io/v1alpha1
-kind: Rollout
-metadata:
-  name: toy-rollout
-spec:
-  replicas: 10
-  selector:
-    matchLabels:
-      app: toy
-  template:
-    metadata:
-      labels:
-        app: toy
-    spec:
-      containers:
-        - image: toy:v1.3
-          imagePullPolicy: IfNotPresent
-          name: toy-flask
-  minReadySeconds: 30
-  revisionHistoryLimit: 3
-  strategy:
-    canary:
-      maxSurge: "25%"
-      maxUnavailable: 0
-      steps:
-        - setWeight: 30
-        - pause:
-            duration: 1m
-        - setWeight: 60
-        - pause: {} # pause indefinitely
+          ports:
+            - containerPort: 5000
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: "1"
+            requests:
+              memory: 256Mi
+              cpu: "0.2"
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
+  name: api
   labels:
-    app: toy
-  name: toy
+    app: api
 spec:
   ports:
-    - name: web
+    - name: http-api
       port: 5000
       protocol: TCP
       targetPort: 5000
   selector:
-    app: toy
+    app: api
   type: LoadBalancer
-status:
-  loadBalancer: {}
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Rollout
+# metadata:
+#   name: toy-rollout
+# spec:
+#   replicas: 10
+#   selector:
+#     matchLabels:
+#       app: toy
+#   template:
+#     metadata:
+#       labels:
+#         app: toy
+#     spec:
+#       containers:
+#         - image: toy:v1.3
+#           imagePullPolicy: IfNotPresent
+#           name: toy-flask
+#   minReadySeconds: 30
+#   revisionHistoryLimit: 3
+#   strategy:
+#     canary:
+#       maxSurge: "25%"
+#       maxUnavailable: 0
+#       steps:
+#         - setWeight: 30
+#         - pause:
+#             duration: 1m
+#         - setWeight: 60
+#         - pause: {} # pause indefinitely

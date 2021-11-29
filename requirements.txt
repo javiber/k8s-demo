@@ -1,4 +1,7 @@
+# dev requirements
 black
 isort
 -r train/requirements.txt
+pandas
+rich
 -r api/requirements.txt
