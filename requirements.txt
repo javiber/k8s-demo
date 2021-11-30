@@ -1,6 +1,7 @@
 # dev requirements
 black
 isort
+pip-tools
 -r train/requirements.txt
 pandas
 rich
