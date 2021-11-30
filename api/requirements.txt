@@ -1,3 +1,2 @@
 Flask
-prometheus-flask-exporter
 requests

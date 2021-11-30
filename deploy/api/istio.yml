@@ -2,7 +2,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: api
+  name: api-gw
 spec:
   selector:
     istio: ingressgateway # use istio default controller
@@ -22,8 +22,22 @@ spec:
   hosts:
     - "*"
   gateways:
-    - api
+    - api-gw
   http:
-    - route:
+    - name: http-jc
+      match:
+        - headers:
+            user:
+              exact: juancarlo
+          ignoreUriCase: true
+      route:
         - destination:
-            host: api
+            host: api-svc-stable
+    - name: http-default
+      route:
+        - destination:
+            host: api-svc-stable
+          weight: 100
+        - destination:
+            host: api-svc-canary
+          weight: 0

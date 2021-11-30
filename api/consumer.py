@@ -12,17 +12,17 @@ from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
+from rich.spinner import Spinner
 from rich.table import Table
 from rich.text import Text
 
 
 @click.command()
 @click.option(
-    "--beta",
-    "-b",
-    is_flag=True,
-    default=False,
-    help="if true include 'beta-user' to headers. Defaults to False",
+    "--user",
+    "-u",
+    default="Jim",
+    help="user to be included in the headers. Defaults to Jim",
 )
 @click.option(
     "--endpoint",
@@ -34,31 +34,30 @@ from rich.text import Text
     "--delay",
     "-d",
     default=1,
-    type=int,
+    type=float,
     help="delay between requests in seconds. Defaults to 1",
 )
-def run(beta, endpoint, delay):
+def run(user, endpoint, delay):
     """Run a consumer that pings the API regularly"""
-    headers = {}
-    if beta:
-        headers["beta-user"] = "true"
+    headers = {"user": user}
+
     df = pd.DataFrame(columns=["datetime", "message", "failed", "latency"])
-    header = Layout(Panel(f"{'[bold yellow]Beta' if beta else 'Regular'} Consumer"))
+    header = Layout(Panel(Spinner("dots", text=f"Consumer\nUser: [bold]'{user}'[/]")))
     messages = Layout()
     stats = Layout()
     body = Layout()
     body.split_row(messages, stats)
     layout = Layout()
     layout.split_column(header, body)
-    with Live(layout, refresh_per_second=2):
+    with Live(layout, refresh_per_second=4):
         while True:
             failed = False
             latency = None
             dt = None
-            req = requests.get(endpoint, headers=headers, timeout=1)
-            latency = req.elapsed
-            dt = parser.parse(req.headers["date"])
             try:
+                req = requests.get(endpoint, headers=headers)
+                latency = req.elapsed
+                dt = parser.parse(req.headers["date"])
                 req.raise_for_status()
                 message = req.json()["message"]
             except Exception as e:
@@ -79,7 +78,7 @@ def run(beta, endpoint, delay):
                 m = x.message
                 if x.failed:
                     m = f"[bold red]{m}[/]"
-                l.append(f"{x.datetime} {m} {x.latency}")
+                l.append(f"{x.datetime} '{m}'")
             messages.update(Panel("\n".join(l)))
 
             stats.update(
@@ -88,7 +87,7 @@ def run(beta, endpoint, delay):
                         [
                             "[bold]Stats(last 30)[/]",
                             f"failed: {df[-30:]['failed'].mean().round(2)}",
-                            f"latency: {df[-30:]['latency'].mean()}",
+                            f"latency: {df[-30:]['latency'].mean()} ({round(df[-30:]['latency'].mean().total_seconds()*1000)}ms)",
                         ]
                     )
                 )

@@ -1,0 +1,117 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: api-rollout
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: api
+      version: v0.1.0
+  template:
+    metadata:
+      labels:
+        app: api
+        version: v0.1.0
+    spec:
+      containers:
+        - name: api
+          image: api:v0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: "1"
+            requests:
+              memory: 256Mi
+              cpu: "0.2"
+  strategy:
+    canary:
+      # Reference to a Service which the controller updates to point to the canary ReplicaSet
+      canaryService: api-svc-canary
+      # Reference to a Service which the controller updates to point to the stable ReplicaSet
+      stableService: api-svc-stable
+      trafficRouting:
+        istio:
+          virtualServices:
+            # One or more virtualServices can be configured
+            # Reference to a VirtualService which the controller updates with canary weights
+            - name: api
+              routes:
+                - http-default
+      analysis:
+        templates:
+          - templateName: success-rate
+          - templateName: latency
+        startingStep: 2 # delay starting on second step
+        args:
+          - name: service-name
+            value: api-svc-canary
+      steps:
+        - setWeight: 20
+        - pause: { duration: 60s }
+        - setWeight: 30
+        - pause: { duration: 60s }
+        - setWeight: 80
+        - pause: {}
+  revisionHistoryLimit: 10
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: success-rate
+spec:
+  args:
+    - name: service-name
+    - name: prometheus-port
+      value: "9090"
+  metrics:
+    - name: success-rate
+      successCondition: result[0] >= 0.95
+      failureLimit: 1
+      interval: 30s
+      provider:
+        prometheus:
+          address: "http://prometheus.istio-system.svc.cluster.local:{{args.prometheus-port}}"
+          query: |
+            sum(
+              irate(
+                istio_requests_total{reporter="source", destination_service_name="{{args.service-name}}", response_code=~"2.*"}[1m]
+              )
+            )
+            /
+            sum(
+              irate(
+                istio_requests_total{reporter="source", destination_service_name="{{args.service-name}}"}[1m]
+              )
+            )
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: latency
+spec:
+  args:
+    - name: service-name
+    - name: prometheus-port
+      value: "9090"
+  metrics:
+    - name: latency
+      failureLimit: 1
+      interval: 30s
+      successCondition: result[0] <= 500
+      provider:
+        prometheus:
+          address: "http://prometheus.istio-system.svc.cluster.local:{{args.prometheus-port}}"
+          query: |
+            histogram_quantile(
+              0.5,
+              sum(
+                rate(
+                  istio_request_duration_milliseconds_bucket{reporter="source", destination_service_name="{{args.service-name}}"}[1m]
+                )
+              )
+              by (le)
+            )

@@ -42,7 +42,7 @@ if [[ "${gpu}" == "true" ]]; then
     kubectl get nodes "-o=custom-columns=NAME:.metadata.name,GPU:.status.allocatable.nvidia\.com/gpu"
 else
     printf "Configuring minikube normally\n"
-    minikube start
+    minikube start --kubernetes-version=1.21.7
 fi
 
 minikube addons enable dashboard
