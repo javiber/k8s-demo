@@ -1,0 +1,33 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: train
+  labels:
+    name: train
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cachevol
+  namespace: train
+  labels:
+    type: local
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cachevol-claim
+  namespace: train
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

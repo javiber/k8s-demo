@@ -1,3 +1,4 @@
+"""Very simple Flask API"""
 import logging
 
 from flask import Flask, jsonify
@@ -11,9 +12,8 @@ app = Flask(__name__)
 @app.route("/")
 def hello_world():
     logger.info("request received")
-    return jsonify({
-        "message": "Hello world!"
-    })
+    return jsonify({"message": "Hello world!"})
+
 
 if __name__ == "__main__":
     logger.info("starting server")

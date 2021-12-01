@@ -81,13 +81,22 @@ def run(user, endpoint, delay):
                 l.append(f"{x.datetime} '{m}'")
             messages.update(Panel("\n".join(l)))
 
+            df = df.iloc[-30:]
+
             stats.update(
                 Panel(
                     "\n".join(
                         [
                             "[bold]Stats(last 30)[/]",
-                            f"failed: {df[-30:]['failed'].mean().round(2)}",
-                            f"latency: {df[-30:]['latency'].mean()} ({round(df[-30:]['latency'].mean().total_seconds()*1000)}ms)",
+                            f"failed: {df['failed'].mean().round(2)}",
+                            f"latency: {df['latency'].mean()} ({round(1000 * df['latency'].mean().total_seconds())}ms)",
+                            "values:",
+                            *[
+                                f"    {v}: {p}"
+                                for v, p in df.message.value_counts(
+                                    normalize=True
+                                ).iteritems()
+                            ],
                         ]
                     )
                 )
