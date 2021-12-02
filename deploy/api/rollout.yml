@@ -3,16 +3,15 @@ kind: Rollout
 metadata:
   name: api-rollout
 spec:
-  replicas: 5
+  # a rollout is similar to a deployment
+  replicas: 3
   selector:
     matchLabels:
       app: api
-      version: v0.1.0
   template:
     metadata:
       labels:
         app: api
-        version: v0.1.0
     spec:
       containers:
         - name: api
@@ -27,6 +26,7 @@ spec:
             requests:
               memory: 256Mi
               cpu: "0.2"
+  # but can define more complex strategies
   strategy:
     canary:
       # Reference to a Service which the controller updates to point to the canary ReplicaSet
@@ -45,7 +45,7 @@ spec:
         templates:
           - templateName: success-rate
           - templateName: latency
-        startingStep: 2 # delay starting on second step
+        startingStep: 2 # start testing on the second step
         args:
           - name: service-name
             value: api-svc-canary
@@ -55,8 +55,8 @@ spec:
         - setWeight: 30
         - pause: { duration: 60s }
         - setWeight: 80
-        - pause: {}
-  revisionHistoryLimit: 10
+        - pause: {} # pause indefinetly until manually promoted
+  revisionHistoryLimit: 10 # how many versions to keep around for rollbacks
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
@@ -101,7 +101,7 @@ spec:
     - name: latency
       failureLimit: 1
       interval: 30s
-      successCondition: result[0] <= 500
+      successCondition: result[0] <= 500 # latency <= 0.5 seconds
       provider:
         prometheus:
           address: "http://prometheus.istio-system.svc.cluster.local:{{args.prometheus-port}}"

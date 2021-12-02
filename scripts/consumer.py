@@ -1,20 +1,13 @@
-import random
 import time
 
 import click
 import pandas as pd
 import requests
-import rich
 from dateutil import parser
-from rich import print
-from rich.columns import Columns
-from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
 from rich.spinner import Spinner
-from rich.table import Table
-from rich.text import Text
 
 
 @click.command()

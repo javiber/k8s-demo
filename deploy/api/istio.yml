@@ -1,4 +1,3 @@
----
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
@@ -7,6 +6,7 @@ spec:
   selector:
     istio: ingressgateway # use istio default controller
   servers:
+    # Allows ingress trafic http on port 80 from any host
     - port:
         number: 80
         name: http
@@ -24,6 +24,7 @@ spec:
   gateways:
     - api-gw
   http:
+    # requests with the matching headers will be routed to stable
     - name: http-jc
       match:
         - headers:
@@ -33,8 +34,11 @@ spec:
       route:
         - destination:
             host: api-svc-stable
+    # all other requests will fall here
     - name: http-default
       route:
+        # start with all traffic going to stable
+        # rollouts will update this values for us later on
         - destination:
             host: api-svc-stable
           weight: 100

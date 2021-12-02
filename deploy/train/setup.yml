@@ -19,9 +19,12 @@ spec:
   capacity:
     storage: 1Gi
   hostPath:
-    # TODO: remove reference to my home
-    path: /home/javiber/workspace/k8s-demo/.cachevol
-  persistentVolumeReclaimPolicy: Retain
+    # if you're using minikube with driver=docker, you need to access the
+    # node (minikube ssh) and create a folder there.
+    # If using driver=None this should point to an existing folder on your workstation
+    # TODO: remove reference to my home, couldn't make it work
+    path: /home/javiber/workspace/k8s-demo/train/.cache
+  persistentVolumeReclaimPolicy: Retain # don't delete the volume
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

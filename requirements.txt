@@ -2,7 +2,6 @@
 black
 isort
 pip-tools
--r train/requirements.txt
+# for scripts/consumer.py
 pandas
 rich
--r api/requirements.txt

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+# rollouts doesn't work with newer versions out of the box
+VERSION=1.21.7
 
 print_usage() {
   printf "confugure minikube\n"
@@ -42,7 +44,7 @@ if [[ "${gpu}" == "true" ]]; then
     kubectl get nodes "-o=custom-columns=NAME:.metadata.name,GPU:.status.allocatable.nvidia\.com/gpu"
 else
     printf "Configuring minikube normally\n"
-    minikube start --kubernetes-version=1.21.7
+    minikube start --kubernetes-version=$VERSION
 fi
 
 minikube addons enable dashboard

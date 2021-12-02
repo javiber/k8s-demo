@@ -4,22 +4,21 @@ metadata:
   name: api
   labels:
     app: api
-    version: v0.1.0
 spec:
-  replicas: 3
+  replicas: 3 # always run 3 pods
   selector:
     matchLabels:
       app: api
-      version: v0.1.0
   template:
     metadata:
       labels:
         app: api
-        version: v0.1.0
     spec:
       containers:
         - name: api
           image: api:v0.1.0
+          # on minikube it will always be present because we build the image in there
+          # on GKE it would pull the image from GCR
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
