@@ -35,6 +35,7 @@ def run(user, endpoint, delay):
     headers = {"user": user}
 
     df = pd.DataFrame(columns=["datetime", "message", "failed", "latency"])
+    df["latency"] = pd.to_timedelta(df["latency"])
     header = Layout(Panel(Spinner("dots", text=f"Consumer\nUser: [bold]'{user}'[/]")))
     messages = Layout()
     stats = Layout()

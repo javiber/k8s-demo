@@ -3,5 +3,4 @@ black
 isort
 pip-tools
 # for scripts/consumer.py
-pandas
-rich
+-r api/requirements.txt
